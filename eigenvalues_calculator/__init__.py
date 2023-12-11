@@ -1,1 +1,1 @@
-from .main import power_method  # noqa
+from .main import power_method, inverse_power_method  # noqa
