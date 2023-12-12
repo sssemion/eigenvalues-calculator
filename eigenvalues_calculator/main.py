@@ -46,13 +46,17 @@ def power_method(matrix: list[list[int | float]], num_iterations: int = 1000) ->
 
 
 def inverse_power_method(matrix: list[list[int | float]], num_iterations: int = 1000) -> int | float:
-    n = _validate_square_matrix(matrix)
+    """
+    Обратный степенной метод. Возвращает наименьшее по модулю собственное значение матрицы.
+    Этот метод не возвращает соответствующий собственный вектор.
+    """
+    _validate_square_matrix(matrix)
     if num_iterations <= 0:
         raise EigenvaluesCalculatorException('num_iterations <= 0')
     matrix = np.linalg.inv(np.array(matrix))
 
     # создаем "случайный" вектор
-    x = x = np.ones(matrix.shape[0])
+    x = np.ones(matrix.shape[0])
 
     for _ in range(num_iterations):
         x_new = matrix @ x
@@ -62,3 +66,34 @@ def inverse_power_method(matrix: list[list[int | float]], num_iterations: int = 
         lambda_1 = lambda_new
 
     return 1 / lambda_1
+
+
+def qr_method(matrix: list[list[int | float]],
+              num_iterations: int = 1000,
+              tol: float = 1e-6,
+              ) -> tuple[np.ndarray, np.ndarray]:
+    """
+    QR-алгоритм для нахождения всех собственных чисел и собственных векторов матрицы
+    """
+    n = _validate_square_matrix(matrix)
+    eigenvalues = np.zeros(n)
+
+    for i in range(num_iterations):
+        Q, R = np.linalg.qr(matrix)
+        matrix = np.dot(R, Q)
+
+        eigenvalues_new = np.diagonal(matrix)
+
+        if np.linalg.norm(eigenvalues_new - eigenvalues) < tol:
+            break
+
+        eigenvalues = eigenvalues_new
+
+    eigenvectors = []
+
+    for eigenvalue in eigenvalues:
+        # Решаем ур-е (A - λI)x = 0
+        eigenvector = np.linalg.solve(matrix - eigenvalue * np.identity(n), np.ones(n))
+        eigenvectors.append(eigenvector / np.linalg.norm(eigenvector))
+
+    return eigenvalues, np.array(eigenvectors).T
